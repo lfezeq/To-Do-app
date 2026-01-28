@@ -1,34 +1,86 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
+type Task = {
+  id: number
+  title: string
+  completed: number
+}
+
+const API = 'http://localhost:3001/api/tasks'
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [title, setTitle] = useState('')
+
+  // GET
+  const fetchTasks = async () => {
+    const res = await fetch(API)
+    const data = await res.json()
+    setTasks(data)
+  }
+
+  useEffect(() => {
+    fetchTasks()
+  }, [])
+
+  // POST
+  const addTask = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!title.trim()) return
+
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    })
+
+    const newTask = await res.json()
+    setTasks([newTask, ...tasks])
+    setTitle('')
+  }
+
+  // PUT
+  const toggleTask = async (id: number) => {
+    const res = await fetch(`${API}/${id}`, { method: 'PUT' })
+    const updated = await res.json()
+
+    setTasks(tasks.map(t => (t.id === id ? updated : t)))
+  }
+
+  // DELETE
+  const deleteTask = async (id: number) => {
+    await fetch(`${API}/${id}`, { method: 'DELETE' })
+    setTasks(tasks.filter(t => t.id !== id))
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="app">
+      <h1>📝 Todo App</h1>
+
+      <form onSubmit={addTask}>
+        <input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Nowe zadanie..."
+        />
+        <button>Dodaj</button>
+      </form>
+
+      <ul>
+        {tasks.map(task => (
+          <li key={task.id} className={task.completed ? 'done' : ''}>
+            <input
+              type="checkbox"
+              checked={!!task.completed}
+              onChange={() => toggleTask(task.id)}
+            />
+            {task.title}
+            <button onClick={() => deleteTask(task.id)}>✖</button>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
