@@ -13,7 +13,6 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [title, setTitle] = useState('')
 
-  // GET
   const fetchTasks = async () => {
     const res = await fetch(API)
     const data = await res.json()
@@ -24,7 +23,6 @@ function App() {
     fetchTasks()
   }, [])
 
-  // POST
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
@@ -40,7 +38,6 @@ function App() {
     setTitle('')
   }
 
-  // PUT
   const toggleTask = async (id: number) => {
     const res = await fetch(`${API}/${id}`, { method: 'PUT' })
     const updated = await res.json()
@@ -48,7 +45,6 @@ function App() {
     setTasks(tasks.map(t => (t.id === id ? updated : t)))
   }
 
-  // DELETE
   const deleteTask = async (id: number) => {
     await fetch(`${API}/${id}`, { method: 'DELETE' })
     setTasks(tasks.filter(t => t.id !== id))
